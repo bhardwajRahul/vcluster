@@ -57,6 +57,8 @@ sync:
     namespaces:
       enabled: false
       mappingsOnly: false
+      hostNamespaces:
+        cleanup: "synced"
 
   fromHost:
     events:
@@ -281,6 +283,12 @@ controlPlane:
       nginx.ingress.kubernetes.io/ssl-redirect: "true"
     spec:
       tls: []
+
+  standalone:
+    dataDir: "/var/lib/vcluster"
+    bundleRepository: "https://github.com/loft-sh/kubernetes/releases/download"
+    joinNode:
+      enabled: true
 
   statefulSet:
     labels: {}

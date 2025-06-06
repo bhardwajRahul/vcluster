@@ -108,6 +108,11 @@ sync:
       enabled: false
       # MappingsOnly defines if creation of namespaces not matched by mappings should be allowed.
       mappingsOnly: false
+      # HostNamespaces defines configuration for handling host namespaces.
+      hostNamespaces:
+        # Cleanup defines the cleanup policy for host resources when vCluster is deleted.
+        # Allowed values: "all", "synced", "none".
+        cleanup: "synced"
   
   # Configure what resources vCluster should sync from the host cluster to the virtual cluster.
   fromHost:
@@ -539,6 +544,18 @@ controlPlane:
     # Spec allows you to configure extra ingress options.
     spec:
       tls: []
+  
+  # Standalone holds configuration for standalone mode. Standalone mode is set automatically when no container is detected and
+  # also implies privateNodes.enabled.
+  standalone:
+    # DataDir defines the data directory for the standalone mode.
+    dataDir: "/var/lib/vcluster"
+    # BundleRepository is the repository to use for downloading the Kubernetes bundle. Defaults to https://github.com/loft-sh/kubernetes/releases/download
+    bundleRepository: "https://github.com/loft-sh/kubernetes/releases/download"
+    # JoinNode holds configuration for the standalone control plane node.
+    joinNode:
+      # Enabled defines if the standalone node should be joined into the cluster. If false, only the control plane binaries will be executed and no node will show up in the actual cluster.
+      enabled: true
   
   # StatefulSet defines options for vCluster statefulSet deployed by Helm.
   statefulSet:
