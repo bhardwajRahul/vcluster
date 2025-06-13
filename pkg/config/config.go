@@ -5,6 +5,7 @@ import (
 
 	"github.com/loft-sh/vcluster/config"
 	"github.com/loft-sh/vcluster/config/legacyconfig"
+	"github.com/loft-sh/vcluster/pkg/constants"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/discovery"
@@ -66,11 +67,11 @@ func (v VirtualClusterConfig) VirtualClusterKubeConfig() config.VirtualClusterKu
 		}
 	case config.K8SDistro:
 		distroConfig = config.VirtualClusterKubeConfig{
-			KubeConfig:          "/data/pki/admin.conf",
-			ServerCAKey:         "/data/pki/server-ca.key",
-			ServerCACert:        "/data/pki/server-ca.crt",
-			ClientCACert:        "/data/pki/client-ca.crt",
-			RequestHeaderCACert: "/data/pki/front-proxy-ca.crt",
+			KubeConfig:          constants.AdminKubeConfig,
+			ServerCAKey:         constants.ServerCAKey,
+			ServerCACert:        constants.ServerCACert,
+			ClientCACert:        constants.ClientCACert,
+			RequestHeaderCACert: constants.RequestHeaderCACert,
 		}
 	}
 
@@ -138,7 +139,7 @@ func (v VirtualClusterConfig) LegacyOptions() (*legacyconfig.LegacyVirtualCluste
 		ServiceName:                 v.WorkloadService,
 		SetOwner:                    v.Experimental.SyncSettings.SetOwner,
 		SyncAllNodes:                v.Sync.FromHost.Nodes.Selector.All,
-		EnableScheduler:             v.ControlPlane.Advanced.VirtualScheduler.Enabled,
+		EnableScheduler:             v.IsVirtualSchedulerEnabled(),
 		DisableFakeKubelets:         !v.Networking.Advanced.ProxyKubelets.ByIP && !v.Networking.Advanced.ProxyKubelets.ByHostname,
 		FakeKubeletIPs:              v.Networking.Advanced.ProxyKubelets.ByIP,
 		ClearNodeImages:             v.Sync.FromHost.Nodes.ClearImageStatus,
@@ -213,7 +214,7 @@ func (v VirtualClusterConfig) DisableMissingAPIs(discoveryClient discovery.Disco
 
 // SchedulingInVirtualClusterEnabled returns true if the virtual scheduler or the hybrid scheduling is enabled.
 func (v VirtualClusterConfig) SchedulingInVirtualClusterEnabled() bool {
-	return v.ControlPlane.Advanced.VirtualScheduler.Enabled || v.Sync.ToHost.Pods.HybridScheduling.Enabled
+	return v.IsVirtualSchedulerEnabled() || v.Sync.ToHost.Pods.HybridScheduling.Enabled
 }
 
 func findResource(resources *metav1.APIResourceList, resourcePlural string) bool {

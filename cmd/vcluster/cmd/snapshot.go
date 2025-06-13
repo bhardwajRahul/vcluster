@@ -314,13 +314,13 @@ func startEmbeddedBackingStore(ctx context.Context, vConfig *config.VirtualClust
 			context.WithoutCancel(ctx),
 			vConfig.Name,
 			vConfig.ControlPlaneNamespace,
+			vConfig.ControlPlaneClient,
 			certificatesDir,
-			1, // this needs to be 1 or otherwise etcd will try to wait for the other replicas
 			vConfig.ControlPlane.BackingStore.Etcd.Embedded.SnapshotCount,
 			"",
 			false,
-			false,
 			vConfig.ControlPlane.BackingStore.Etcd.Embedded.ExtraArgs,
+			true,
 		)
 		if err != nil {
 			return fmt.Errorf("start embedded etcd: %w", err)
@@ -350,7 +350,7 @@ func generateCertificates(ctx context.Context, vConfig *config.VirtualClusterCon
 	}
 
 	// generate etcd certificates
-	certificatesDir := "/data/pki"
+	certificatesDir := constants.PKIDir
 	err = setup.GenerateCerts(ctx, serviceCIDR, certificatesDir, vConfig)
 	if err != nil {
 		return "", err

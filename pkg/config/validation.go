@@ -4,6 +4,7 @@ import (
 	"crypto/x509"
 	"errors"
 	"fmt"
+	"net"
 	"net/url"
 	"slices"
 	"strings"
@@ -187,6 +188,13 @@ func ValidateConfigAndSetDefaults(vConfig *VirtualClusterConfig) error {
 		return fmt.Errorf("namespace sync: %w", err)
 	}
 
+	// if we're runnign in with namespace sync enabled, we want to sync all objects.
+	// otherwise, objects created on host in synced namespaces won't get imported into vCluster.
+	if vConfig.Sync.ToHost.Namespaces.Enabled {
+		vConfig.Sync.ToHost.Secrets.All = true
+		vConfig.Sync.ToHost.ConfigMaps.All = true
+	}
+
 	// set service name
 	if vConfig.ControlPlane.Advanced.WorkloadServiceAccount.Name == "" {
 		vConfig.ControlPlane.Advanced.WorkloadServiceAccount.Name = "vc-workload-" + vConfig.Name
@@ -205,7 +213,7 @@ func ValidateConfigAndSetDefaults(vConfig *VirtualClusterConfig) error {
 	}
 
 	// validate dedicated nodes mode
-	err = validateDedicatedNodesMode(vConfig)
+	err = validatePrivatedNodesMode(vConfig)
 	if err != nil {
 		return err
 	}
@@ -866,9 +874,21 @@ func isIn(crdName string, s ...string) bool {
 	return slices.Contains(s, crdName)
 }
 
-func validateDedicatedNodesMode(vConfig *VirtualClusterConfig) error {
+func validatePrivatedNodesMode(vConfig *VirtualClusterConfig) error {
 	if !vConfig.PrivateNodes.Enabled {
+		if vConfig.ControlPlane.Endpoint != "" {
+			return fmt.Errorf("endpoint is only supported in private nodes mode")
+		}
+
 		return nil
+	}
+
+	// validate endpoint
+	if vConfig.ControlPlane.Endpoint != "" {
+		_, _, err := net.SplitHostPort(vConfig.ControlPlane.Endpoint)
+		if err != nil {
+			return fmt.Errorf("invalid endpoint %s: %w", vConfig.ControlPlane.Endpoint, err)
+		}
 	}
 
 	// integrations are not supported in private nodes mode

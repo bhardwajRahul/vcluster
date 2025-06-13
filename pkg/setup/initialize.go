@@ -10,6 +10,7 @@ import (
 	vclusterconfig "github.com/loft-sh/vcluster/config"
 	"github.com/loft-sh/vcluster/pkg/certs"
 	"github.com/loft-sh/vcluster/pkg/config"
+	"github.com/loft-sh/vcluster/pkg/constants"
 	"github.com/loft-sh/vcluster/pkg/k3s"
 	"github.com/loft-sh/vcluster/pkg/k8s"
 	"github.com/loft-sh/vcluster/pkg/kubeadm"
@@ -86,13 +87,13 @@ func initialize(ctx context.Context, options *config.VirtualClusterConfig) error
 				context.WithoutCancel(ctx),
 				options.Name,
 				options.ControlPlaneNamespace,
+				options.ControlPlaneClient,
 				certificatesDir,
-				int(options.ControlPlane.StatefulSet.HighAvailability.Replicas),
 				options.ControlPlane.BackingStore.Etcd.Embedded.SnapshotCount,
 				migrateFrom,
 				true,
-				options.ControlPlane.StatefulSet.Scheduling.PodManagementPolicy != "Parallel",
 				options.ControlPlane.BackingStore.Etcd.Embedded.ExtraArgs,
+				false,
 			)
 			if err != nil {
 				return fmt.Errorf("start embedded etcd: %w", err)
@@ -117,7 +118,7 @@ func initialize(ctx context.Context, options *config.VirtualClusterConfig) error
 
 		// try to generate k8s certificates
 		certificatesDir := filepath.Dir(options.VirtualClusterKubeConfig().ServerCACert)
-		if certificatesDir == "/data/pki" {
+		if certificatesDir == constants.PKIDir {
 			err := GenerateCerts(ctx, serviceCIDR, certificatesDir, options)
 			if err != nil {
 				return err
@@ -131,13 +132,13 @@ func initialize(ctx context.Context, options *config.VirtualClusterConfig) error
 				context.WithoutCancel(ctx),
 				options.Name,
 				options.ControlPlaneNamespace,
+				options.ControlPlaneClient,
 				certificatesDir,
-				int(options.ControlPlane.StatefulSet.HighAvailability.Replicas),
 				options.ControlPlane.BackingStore.Etcd.Embedded.SnapshotCount,
 				migrateFrom,
 				true,
-				options.ControlPlane.StatefulSet.Scheduling.PodManagementPolicy != "Parallel",
 				options.ControlPlane.BackingStore.Etcd.Embedded.ExtraArgs,
+				false,
 			)
 			if err != nil {
 				return fmt.Errorf("start embedded etcd: %w", err)

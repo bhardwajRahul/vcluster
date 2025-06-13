@@ -112,6 +112,7 @@ controlPlane:
         command: []
         extraArgs: []
       scheduler:
+        enabled: false
         command: []
         extraArgs: []
       env: []
@@ -282,6 +283,14 @@ controlPlane:
     spec:
       tls: []
 
+  standalone:
+    dataDir: "/var/lib/vcluster"
+    bundleRepository: "https://github.com/loft-sh/kubernetes/releases/download"
+    joinNode:
+      enabled: true
+      containerd:
+        enabled: true
+
   statefulSet:
     labels: {}
     annotations: {}
@@ -350,10 +359,20 @@ controlPlane:
     probes:
       livenessProbe:
         enabled: true
+        failureThreshold: 60
+        initialDelaySeconds: 60
+        timeoutSeconds: 3
+        periodSeconds: 2
       readinessProbe:
         enabled: true
+        failureThreshold: 60
+        timeoutSeconds: 3
+        periodSeconds: 2
       startupProbe:
         enabled: true
+        failureThreshold: 300
+        timeoutSeconds: 3
+        periodSeconds: 6
 
   serviceMonitor:
     enabled: false
@@ -407,6 +426,9 @@ privateNodes:
   autoUpgrade:
     enabled: true
     concurrency: 1
+  joinNode:
+    containerd:
+      enabled: true
   localPathProvisioner:
     enabled: true
   cni:
@@ -606,3 +628,6 @@ experimental:
 
 telemetry:
   enabled: true
+
+logging:
+  encoding: console
